@@ -56,7 +56,7 @@ const SmallSection = ({ title, endpoint }) => {
 				</Flex>
 			) : error ? (
 				<Box my={2}>
-					<Text>Sorry, an error occured</Text>
+					<Text>Вибачте, сталася помилка</Text>
 				</Box>
 			) : (
 				<Flex
