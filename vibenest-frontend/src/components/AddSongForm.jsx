@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import {
     Button,
     Container,
@@ -250,7 +251,7 @@ const AddSongForm = () => {
                         
                         <Button
                             mt={4}
-                            colorScheme="blue"
+                            color="#C05621"
                             type="submit"
                             w="full"
                         >

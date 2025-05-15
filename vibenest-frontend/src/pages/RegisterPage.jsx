@@ -71,7 +71,7 @@ const RegisterPage = () => {
 					<Heading fontSize="2xl" color="zinc.200">
 						Реєстрація
 					</Heading>
-					<Text fontSize="sm">Щоб продовжити користуватися Music Player</Text>
+					<Text fontSize="sm">Щоб продовжити користуватися Vibenest</Text>
 				</Box>
 				<Flex direction="column" gap={4}>
 					<FormControl>

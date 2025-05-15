@@ -71,7 +71,7 @@ const LoginPage = () => {
 					<Heading fontSize="2xl" color="zinc.200">
 						Вхід
 					</Heading>
-					<Text fontSize="sm">Щоб продовжити користуватися Music Player</Text>
+					<Text fontSize="sm">Щоб продовжити користуватися Vibenest</Text>
 				</Box>
 				<Flex direction="column" gap={4}>
 					<FormControl>

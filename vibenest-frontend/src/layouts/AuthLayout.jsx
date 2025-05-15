@@ -1,6 +1,5 @@
 import { Box, Flex, Heading } from "@chakra-ui/react";
 import { useEffect } from "react";
-import { BiMusic } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 
@@ -23,13 +22,7 @@ const AuthLayout = () => {
 				pl={6}
 				h={{ base: "full", md: "5rem" }}>
 				<Flex align="center" color="accent.main" justify="flex-start" gap={2}>
-					<BiMusic size={30} />
-					<Heading
-						fontWeight="semibold"
-						color="gray.200"
-						fontSize={{ base: "lg", md: "2xl" }}>
-						Music Player
-					</Heading>
+					<img src="/vibenest-logo.png" alt="Logo" style={{height:55}} />
 				</Flex>
 			</Flex>
 			<Box bg="#181818" h="full" minH="91vh">

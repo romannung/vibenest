@@ -44,11 +44,7 @@ const MobileNav = () => {
 			<Flex align="center" justify="space-between" p={2}>
 				<Link to="/home">
 					<Flex color="accent.main" align="center" gap={4}>
-						<Image src="/favicon.ico" alt="Logo" width="30px" height="30px" />
-
-						<Heading as="h1" fontWeight="semibold" fontSize="2xl">
-							Music Player
-						</Heading>
+						<Image src="/vibenest-logo.png" alt="Logo" width="180px" height="auto" />
 					</Flex>
 				</Link>
 				<Button variant="unstyled" onClick={toggleNav}>
@@ -81,10 +77,7 @@ const DesktopNav = () => {
 			overflowX="hidden">
 			<Flex direction="column" minH="100vh" p={4}>
 				<Flex color="accent.main" align="center" gap={4} mb={2}>
-					<Image src="/favicon.ico" alt="Logo" width="30px" height="30px" />
-					<Heading as="h1" fontWeight="semibold" fontSize="2xl">
-						Music Player
-					</Heading>
+					<Image src="/vibenest-logo.png" alt="Logo" width="auto" height="auto" />
 				</Flex>
 				<NavContent />
 			</Flex>
@@ -109,7 +102,7 @@ const NavContent = () => {
 	};
 	return (
 		<Box>
-			<Flex direction="column" gap={2} mt={12}>
+			<Flex direction="column" gap={2} mt={4}>
 				<NavLink to="/home">
 					{({ isActive }) => (
 						<Button
@@ -225,7 +218,7 @@ const NavContent = () => {
 			</Flex>
 			<Divider
 				bg="primary.700"
-				border="0"
+				border="5"
 				mt={{ base: 12, md: 6, lg: 12 }}
 				h="1px"
 				mb={4}
