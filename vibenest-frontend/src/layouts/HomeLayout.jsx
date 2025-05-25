@@ -4,6 +4,7 @@ import { Grid, GridItem } from "@chakra-ui/react";
 import MusicPlayer from "../components/MusicPlayer/index.jsx";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
+import { Box } from "@chakra-ui/react";
 
 const HomeLayout = () => {
 	const { currentTrack } = useSelector((state) => state.player);
