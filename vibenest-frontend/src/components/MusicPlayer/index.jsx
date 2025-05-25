@@ -13,7 +13,6 @@ import {
 	nextTrack,
 	prevTrack,
 	setPlaying,
-	resetPlayer,
 } from "../../redux/slices/playerSlice";
 import { client } from "../../api";
 import { setUser } from "../../redux/slices/userSlice";
@@ -44,8 +43,6 @@ const MusicPlayer = () => {
 		repeat: false,
 	});
 	const [userInteracted, setUserInteracted] = useState(false);
-
-	if (!user) return null;
 
 	useEffect(() => {
 		const handleUserInteraction = () => {
@@ -83,6 +80,26 @@ const MusicPlayer = () => {
 			audioRef.current.pause();
 		}
 	}, [isPlaying, userInteracted, currentTrack?._id]);
+
+	// Додаємо новий useEffect для автоматичного відтворення при зміні треку
+	useEffect(() => {
+		if (currentTrack?._id && userInteracted && audioRef.current) {
+			try {
+				const playPromise = audioRef.current.play();
+				if (playPromise !== undefined) {
+					playPromise.then(() => {
+						dispatch(setPlaying(true));
+					}).catch((error) => {
+						console.error("Помилка відтворення:", error);
+						dispatch(setPlaying(false));
+					});
+				}
+			} catch (error) {
+				console.error("Помилка відтворення:", error);
+				dispatch(setPlaying(false));
+			}
+		}
+	}, [currentTrack?._id, userInteracted]);
 
 	useEffect(() => {
 		if (audioRef.current) {
@@ -155,6 +172,18 @@ const MusicPlayer = () => {
 			};
 		}
 	}, [currentTrack?._id]);
+
+	useEffect(() => {
+		if (audioRef.current && currentTrack) {
+			if (audioRef.current.paused && isPlaying) {
+				dispatch(setPlaying(false));
+			}
+			if (!audioRef.current.paused && !isPlaying) {
+				dispatch(setPlaying(true));
+			}
+		}
+		// eslint-disable-next-line
+	}, [currentTrack]);
 
 	const seekPoint = (e) => {
 		if (audioRef.current && audioRef.current.duration) {
@@ -276,15 +305,16 @@ const MusicPlayer = () => {
 
 	const handleEnded = () => {
 		if (repeatStatus === "TRACK") {
-			restartSong();
+			// If repeat is set to single track, restart the current song
+			if (audioRef.current) {
+				audioRef.current.currentTime = 0;
+				audioRef.current.play();
+			}
 		} else if (!isEndOfTracklist || repeatStatus === "TRACKLIST") {
-			dispatch(nextTrack());
-			setUserInteracted(true);
-			// Додаємо невелику затримку перед відтворенням
-			setTimeout(() => {
-				dispatch(setPlaying(true));
-			}, 100);
+			// If not at the end of playlist or repeat is set to playlist, play next song
+			handleNextSong();
 		} else {
+			// If at the end of playlist and no repeat, stop playing
 			dispatch(setPlaying(false));
 		}
 	};
@@ -332,18 +362,6 @@ const MusicPlayer = () => {
 		return () => window.removeEventListener('user-interacted', tryPlay);
 	}, [isPlaying, currentTrack?._id]);
 
-	useEffect(() => {
-		if (!user) {
-			dispatch(resetPlayer());
-		}
-	}, [user]);
-
-	useEffect(() => {
-		if (isPlaying && audioRef.current && audioRef.current.paused) {
-			dispatch(setPlaying(false));
-		}
-	}, []);
-
 	return (
 		<>
 			<LoginModal ref={modalRef} onClose={onClose} isOpen={isOpen} />
@@ -362,7 +380,20 @@ const MusicPlayer = () => {
 				roundedTop="lg"
 				bgColor="blackAlpha.700"
 				backdropFilter="blur(15px)">
-				<TrackDetails track={currentTrack} />
+				<TrackDetails 
+					track={currentTrack} 
+					onDoubleClick={() => {
+						if (audioRef.current) {
+							if (isPlaying) {
+								audioRef.current.pause();
+								dispatch(setPlaying(false));
+							} else {
+								audioRef.current.play();
+								dispatch(setPlaying(true));
+							}
+						}
+					}}
+				/>
 				<Flex direction="column" gap={2}>
 					<PlayControls
 						isPlaying={isPlaying}
@@ -392,7 +423,7 @@ const MusicPlayer = () => {
 						display="inline-flex"
 						alignItems="center"
 						justifyContent="center"
-						color="accent.main"
+						color="red.500"
 						onClick={handleLike}>
 						{user?.favorites.includes(currentTrack._id) ? (
 							<AiFillHeart />
