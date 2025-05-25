@@ -20,7 +20,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 						defaultOptions: {
 							position: "top",
 							duration: 3000,
-							variant: "subtle",
 							containerStyle: { fontSize: 14 },
 						},
 					}}>
