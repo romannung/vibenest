@@ -4,7 +4,7 @@ import {
     Heading, useToast, Text, Image, SlideFade, useColorModeValue
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import client from '../services/client';
+import { client } from '../api';
 
 const AddSongForm = () => {
     const [formData, setFormData] = useState({
