@@ -141,11 +141,11 @@ const createSong = async (req, res) => {
 	try {
 		console.log('=== Початок створення пісні ===');
 		console.log('Request body:', req.body);
-		console.log('Request file:', req.file);
+		console.log('Request files:', { audio: req.file, image: req.files?.image });
 		
 		const { title, duration, artistes } = req.body;
 		
-		// Перевірка наявності файлу
+		// Перевірка наявності аудіо файлу
 		if (!req.file) {
 			console.log('Помилка: Аудіо файл відсутній');
 			return res.status(400).json({ message: "Аудіо файл обов'язковий" });
@@ -179,10 +179,16 @@ const createSong = async (req, res) => {
 			artistesArray = [artistes];
 		}
 
+		// Визначаємо URL обкладинки
+		let coverImageUrl = req.files?.image?.path;
+		if (!coverImageUrl) {
+			coverImageUrl = "https://firebasestorage.googleapis.com/v0/b/socialstream-ba300.appspot.com/o/music_app_files%2Fplaylist_cover.jpg?alt=media&token=546adcad-e9c3-402f-8a57-b7ba252100ec";
+		}
+
 		console.log('Створення нової пісні з даними:', {
 			title: title.trim(),
 			duration: duration.trim(),
-			coverImage: req.file.path,
+			coverImage: coverImageUrl,
 			artistes: artistesArray,
 			songUrl
 		});
@@ -190,7 +196,7 @@ const createSong = async (req, res) => {
 		const newSong = new Song({
 			title: title.trim(),
 			duration: duration.trim(),
-			coverImage: req.file.path,
+			coverImage: coverImageUrl,
 			artistes: artistesArray,
 			songUrl,
 			type: "Song",

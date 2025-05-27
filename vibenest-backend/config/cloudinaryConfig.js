@@ -83,4 +83,4 @@ export const getCloudinaryUrl = (file) => {
 
     console.log('Успішно отримано URL з Cloudinary:', file.path);
     return file.path;
-}; 
+};

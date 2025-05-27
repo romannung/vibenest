@@ -1,21 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-    Box,
-    Button,
-    Container,
-    FormControl,
-    FormLabel,
-    Input,
-    VStack,
-    Heading,
-    useToast,
-    Text,
-    Image,
-    SlideFade,
-    useColorModeValue
+    Box, Button, Container, FormControl, FormLabel, Input, VStack,
+    Heading, useToast, Text, Image, SlideFade, useColorModeValue
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { client } from '../api';
 
 const AddSongForm = () => {
     const [formData, setFormData] = useState({
@@ -28,38 +16,36 @@ const AddSongForm = () => {
     const [imageFile, setImageFile] = useState(null);
     const [previewImage, setPreviewImage] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    const audioFileRef = useRef(null); // реф для форми
     const toast = useToast();
     const navigate = useNavigate();
-
     const textColor = useColorModeValue('gray.800', 'white');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileDrop = (e, type) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file, type);
+    const showError = (msg) => {
+        toast({
+            title: "Помилка!",
+            description: msg,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+        });
     };
 
     const handleFile = (file, type) => {
         if (type === 'audio') {
             if (!file.type.startsWith('audio/')) {
-                toast({
-                    title: "Помилка!",
-                    description: "Будь ласка, виберіть аудіо файл",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true,
-                });
+                showError("Будь ласка, виберіть аудіо файл");
                 return;
             }
             setAudioFile(file);
+            audioFileRef.current = file;
+
             const audio = new Audio();
             audio.src = URL.createObjectURL(file);
             audio.onloadedmetadata = () => {
@@ -72,17 +58,81 @@ const AddSongForm = () => {
             };
         } else if (type === 'image') {
             if (!file.type.startsWith('image/')) {
-                toast({
-                    title: "Помилка!",
-                    description: "Будь ласка, виберіть файл зображення",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true,
-                });
+                showError("Будь ласка, виберіть файл зображення");
                 return;
             }
             setImageFile(file);
             setPreviewImage(URL.createObjectURL(file));
+        }
+    };
+
+    const handleFileDrop = (e, type) => {
+        e.preventDefault();
+        if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            handleFile(file, type);
+            e.dataTransfer.clearData();
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+
+        if (!formData.title.trim() || !formData.artistes.trim()) {
+            showError("Будь ласка, заповніть всі обов'язкові поля");
+            setSubmitting(false);
+            return;
+        }
+
+        if (!audioFileRef.current) {
+            showError("Будь ласка, завантажте аудіо файл");
+            setSubmitting(false);
+            return;
+        }
+
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('title', formData.title.trim());
+            formDataToSend.append('duration', formData.duration.trim());
+            formDataToSend.append('artistes', JSON.stringify(formData.artistes.split(',').map(a => a.trim())));
+            formDataToSend.append('file', audioFileRef.current);
+
+            if (imageFile) {
+                formDataToSend.append('image', imageFile);
+            } else if (formData.coverImage.trim()) {
+                formDataToSend.append('coverImage', formData.coverImage.trim());
+            }
+
+            const response = await fetch('http://localhost:5000/api/songs/create', {
+                method: 'POST',
+                body: formDataToSend,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Помилка при створенні пісні');
+            }
+
+            toast({
+                title: "Успіх!",
+                description: "Пісню успішно додано",
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+
+            // reset
+            setFormData({ title: '', duration: '', coverImage: '', artistes: '' });
+            setAudioFile(null);
+            audioFileRef.current = null;
+            setImageFile(null);
+            setPreviewImage('');
+            navigate('/home');
+        } catch (error) {
+            showError(error.message || 'Помилка при відправці форми. Спробуйте ще раз.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -98,78 +148,21 @@ const AddSongForm = () => {
     };
 
     return (
-        <Box
-            minH="100vh"
-            overflowY="auto"
-            pb="150px"
-            pl="50px"
-        >
+        <Box minH="100vh" overflowY="auto" pb="150px" pl="50px">
             <Container maxW="container.md" py={8}>
                 <SlideFade in offsetY={20}>
                     <VStack spacing={8} align="stretch" w="full" color={textColor}>
                         <Heading as="h1" size="lg">Додати нову пісню</Heading>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            if (!audioFile) {
-                                toast({
-                                    title: "Помилка!",
-                                    description: "Будь ласка, виберіть аудіо файл",
-                                    status: "error",
-                                    duration: 3000,
-                                    isClosable: true,
-                                });
-                                return;
-                            }
-
-                            setSubmitting(true);
-                            const formDataToSend = new FormData();
-                            formDataToSend.append('title', formData.title);
-                            formDataToSend.append('duration', formData.duration);
-                            formDataToSend.append('artistes', JSON.stringify(formData.artistes.split(',').map(artist => artist.trim())));
-                            formDataToSend.append('file', audioFile);
-                            if (imageFile) {
-                                formDataToSend.append('image', imageFile);
-                            }
-
-                            try {
-                                const response = await client.post('/songs/create', formDataToSend, {
-                                    headers: {
-                                        'Content-Type': 'multipart/form-data',
-                                    },
-                                });
-
-                                if (response.data) {
-                                    toast({
-                                        title: "Успіх!",
-                                        description: "Пісню успішно додано",
-                                        status: "success",
-                                        duration: 3000,
-                                        isClosable: true,
-                                    });
-                                    navigate('/');
-                                }
-                            } catch (error) {
-                                console.error('Error uploading song:', error);
-                                toast({
-                                    title: "Помилка!",
-                                    description: error.response?.data?.message || "Сталася помилка при завантаженні пісні",
-                                    status: "error",
-                                    duration: 3000,
-                                    isClosable: true,
-                                });
-                            } finally {
-                                setSubmitting(false);
-                            }
-                        }}>
+                        <form onSubmit={handleSubmit}>
                             <VStack spacing={6} w="full">
                                 <FormControl isRequired>
                                     <FormLabel color="white">Назва пісні</FormLabel>
-                                    <Input name="title" value={formData.title} onChange={handleChange} />
+                                    <Input name="title" value={formData.title} onChange={handleChange} color="white" />
                                 </FormControl>
 
-                                <FormControl isRequired>
+                                <FormControl>
                                     <FormLabel color="white">Тривалість</FormLabel>
-                                    <Input name="duration" value={formData.duration} onChange={handleChange} readOnly={!!audioFile} />
+                                    <Input name="duration" value={formData.duration} readOnly color="white" />
                                 </FormControl>
 
                                 <FormControl>
@@ -187,51 +180,26 @@ const AddSongForm = () => {
                                         fontWeight="bold"
                                     >
                                         <Text>Перетягніть зображення сюди</Text>
-                                        <Button
-                                            mt={3}
-                                             bg="#C05621"          
-                                            color="white"
-                                            _hover={{ bg: "#9C4221" }}
-                                            variant="solid"
-                                            fontWeight="bold"
-                                            px={6}
-                                            as="label"
-                                            cursor="pointer"
-                                        >
+                                        <Button mt={3} bg="#C05621" color="white" _hover={{ bg: "#9C4221" }} as="label">
                                             Вибрати файл
-                                            <Input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFile(e.target.files[0], 'image')}
-                                                sx={fileInputStyles}
-                                            />
+                                            <Input type="file" accept="image/*" onChange={(e) => handleFile(e.target.files[0], 'image')} sx={fileInputStyles} />
                                         </Button>
                                     </Box>
                                     <Text fontSize="sm" mt={2}>або вставте URL зображення:</Text>
-                                    <Input
-                                        name="coverImage"
-                                        value={formData.coverImage}
-                                        onChange={handleChange}
-                                        type="url"
-                                    />
+                                    <Input name="coverImage" value={formData.coverImage} onChange={handleChange} type="url" color="white" />
                                     {previewImage && (
                                         <Box mt={2}>
-                                            <Image
-                                                src={previewImage}
-                                                alt="Preview"
-                                                maxH="200px"
-                                                objectFit="contain"
-                                            />
+                                            <Image src={previewImage} alt="Preview" maxH="200px" objectFit="contain" />
                                         </Box>
                                     )}
                                 </FormControl>
 
                                 <FormControl isRequired>
                                     <FormLabel color="white">Виконавці (через кому)</FormLabel>
-                                    <Input name="artistes" value={formData.artistes} onChange={handleChange} />
+                                    <Input name="artistes" value={formData.artistes} onChange={handleChange} color="white" />
                                 </FormControl>
 
-                                <FormControl isRequired>
+                                <FormControl>
                                     <FormLabel color="white">Аудіо файл (Drag & Drop або вибір)</FormLabel>
                                     <Box
                                         position="relative"
@@ -246,24 +214,9 @@ const AddSongForm = () => {
                                         fontWeight="bold"
                                     >
                                         <Text>Перетягніть аудіо файл сюди</Text>
-                                        <Button
-                                            mt={3}
-                                            bg="#C05621"          
-                                            color="white"
-                                            _hover={{ bg: "#9C4221" }}
-                                            variant="solid"
-                                            fontWeight="bold"
-                                            px={6}
-                                            as="label"
-                                            cursor="pointer"
-                                        >
+                                        <Button mt={3} bg="#C05621" color="white" _hover={{ bg: "#9C4221" }} as="label">
                                             Вибрати файл
-                                            <Input
-                                                type="file"
-                                                accept="audio/*"
-                                                onChange={(e) => handleFile(e.target.files[0], 'audio')}
-                                                sx={fileInputStyles}
-                                            />
+                                            <Input type="file" accept="audio/*" onChange={(e) => handleFile(e.target.files[0], 'audio')} sx={fileInputStyles} />
                                         </Button>
                                         {audioFile && (
                                             <Text fontSize="sm" color="green.300" mt={1}>
@@ -273,16 +226,7 @@ const AddSongForm = () => {
                                     </Box>
                                 </FormControl>
 
-                                <Button
-                                    mt={4}
-                                   bg="#C05621"          
-                                    color="white"
-                                    _hover={{ bg: "#9C4221" }}
-                                    type="submit"
-                                    w="full"
-                                    isLoading={submitting}
-                                    fontWeight="bold"
-                                >
+                                <Button mt={4} bg="#C05621" color="white" _hover={{ bg: "#9C4221" }} type="submit" w="full" isLoading={submitting}>
                                     Додати пісню
                                 </Button>
                             </VStack>
