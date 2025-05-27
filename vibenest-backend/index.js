@@ -40,6 +40,6 @@ app.use("/api/playlists/", playlistRouter);
 
 const port = process.env.PORT || 5000;
 
-app.listen(port, '0.0.0.0', async () => {
+app.listen(port, '0.0.0.0', () => {
 	console.log(`SERVER RUNNING ON PORT ${port}`);
 });
