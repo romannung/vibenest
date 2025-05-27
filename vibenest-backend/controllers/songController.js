@@ -141,7 +141,7 @@ const createSong = async (req, res) => {
 	try {
 		console.log('=== Початок створення пісні ===');
 		console.log('Request body:', req.body);
-		console.log('Request files:', { audio: req.file, image: req.files?.image });
+		console.log('Request files:', { audio: req.file, image: req.file });
 		
 		const { title, duration, artistes } = req.body;
 		
@@ -170,14 +170,21 @@ const createSong = async (req, res) => {
 		let artistesArray;
 		try {
 			console.log('Обробка виконавців:', artistes);
-			artistesArray = Array.isArray(artistes) ? artistes : [artistes];
+			if (typeof artistes === 'string') {
+				artistesArray = artistes.split(',').map(a => a.trim());
+			} else if (Array.isArray(artistes)) {
+				artistesArray = artistes;
+			} else {
+				artistesArray = [artistes];
+			}
+			console.log('Оброблені виконавці:', artistesArray);
 		} catch (error) {
 			console.log('Помилка обробки виконавців, використовуємо як єдиний рядок');
 			artistesArray = [artistes];
 		}
 
 		// Визначаємо URL обкладинки
-		let coverImageUrl = req.files?.image?.path;
+		let coverImageUrl = req.body.coverImage;
 		if (!coverImageUrl) {
 			coverImageUrl = "https://firebasestorage.googleapis.com/v0/b/socialstream-ba300.appspot.com/o/music_app_files%2Fplaylist_cover.jpg?alt=media&token=546adcad-e9c3-402f-8a57-b7ba252100ec";
 		}

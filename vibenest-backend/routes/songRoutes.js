@@ -21,6 +21,6 @@ router.get("/random", getRandom);
 router.get("/around-you", getAroundYou);
 router.get("/:id", getSongById);
 router.patch("/like/:id", verifyToken, likeSong);
-router.post("/create", uploadAudio.single('file'), uploadImage.single('image'), createSong);
+router.post("/create", uploadAudio.single('file'), createSong);
 
 export { router as songsRouter };

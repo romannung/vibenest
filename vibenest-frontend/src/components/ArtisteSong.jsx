@@ -101,7 +101,11 @@ const ArtisteSong = ({ song, handlePlay }) => {
 							)}
 						</Flex>
 						<Text color="zinc.400" fontSize={{ base: "xs", md: "sm" }}>
-							{song?.artistes.join(", ")}
+							{Array.isArray(song?.artistes) 
+								? song.artistes.join(", ") 
+								: typeof song?.artistes === 'string' 
+									? song.artistes 
+									: ''}
 						</Text>
 					</Box>
 				</Flex>
