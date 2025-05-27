@@ -18,7 +18,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-	origin: ['https://vibenest-1-0zkv.onrender.com'],
+	origin: ['https://vibenest-1-0zkv.onrender.com', 'http://localhost:5173'],
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	credentials: true
 }));
