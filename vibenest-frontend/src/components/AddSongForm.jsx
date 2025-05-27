@@ -96,7 +96,7 @@ const AddSongForm = () => {
             const formDataToSend = new FormData();
             formDataToSend.append('title', formData.title.trim());
             formDataToSend.append('duration', formData.duration.trim());
-            formDataToSend.append('artistes', JSON.stringify(formData.artistes.split(',').map(a => a.trim())));
+            formDataToSend.append('artistes', formData.artistes.split(',').map(a => a.trim()));
             formDataToSend.append('file', audioFileRef.current);
 
             if (imageFile) {

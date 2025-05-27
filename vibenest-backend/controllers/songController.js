@@ -169,13 +169,10 @@ const createSong = async (req, res) => {
 
 		let artistesArray;
 		try {
-			console.log('Парсинг виконавців:', artistes);
-			artistesArray = JSON.parse(artistes);
-			if (!Array.isArray(artistesArray)) {
-				artistesArray = [artistes];
-			}
+			console.log('Обробка виконавців:', artistes);
+			artistesArray = Array.isArray(artistes) ? artistes : [artistes];
 		} catch (error) {
-			console.log('Помилка парсингу виконавців, використовуємо як єдиний рядок');
+			console.log('Помилка обробки виконавців, використовуємо як єдиний рядок');
 			artistesArray = [artistes];
 		}
 
