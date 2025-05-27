@@ -10,7 +10,7 @@ import {
 	getSongById
 } from "../controllers/songController.js";
 import { verifyToken } from "../middleware/validateToken.js";
-import { uploadAudio, uploadImage } from "../config/cloudinaryConfig.js";
+import { uploadAudio } from "../config/cloudinaryConfig.js";
 
 const router = express.Router();
 
@@ -21,6 +21,6 @@ router.get("/random", getRandom);
 router.get("/around-you", getAroundYou);
 router.get("/:id", getSongById);
 router.patch("/like/:id", verifyToken, likeSong);
-router.post("/create", uploadAudio.single('file'), uploadImage.single('image'), createSong);
+router.post("/create", uploadAudio.single('file'), createSong);
 
 export { router as songsRouter };

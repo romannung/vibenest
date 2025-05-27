@@ -1,6 +1,6 @@
 import Song from "../models/Song.js";
 import User from "../models/User.js";
-import { uploadToCloudinary } from "../config/cloudinaryConfig.js";
+import { uploadToCloudinary, getCloudinaryUrl } from "../config/cloudinaryConfig.js";
 
 //@desc Get all the songs
 //@route GET /api/songs
@@ -145,7 +145,7 @@ const createSong = async (req, res) => {
 		const { title, duration, artistes } = req.body;
 		
 		// Перевірка наявності файлу
-		if (!req.files || !req.files.file || req.files.file.length === 0) {
+		if (!req.file) {
 			return res.status(400).json({ message: "Аудіо файл обов'язковий" });
 		}
 
@@ -154,13 +154,10 @@ const createSong = async (req, res) => {
 			return res.status(400).json({ message: "Всі поля обов'язкові" });
 		}
 
-		const audioFile = req.files.file[0];
-		const imageFile = req.files.image && req.files.image.length > 0 ? req.files.image[0] : null;
-
-		// Завантажуємо файли на Cloudinary
-		const songUrl = await uploadToCloudinary(audioFile, 'auto');
-		const coverImage = imageFile 
-			? await uploadToCloudinary(imageFile, 'image')
+		// Отримуємо URL з Cloudinary
+		const songUrl = getCloudinaryUrl(req.file);
+		const coverImage = req.file 
+			? getCloudinaryUrl(req.file)
 			: "https://firebasestorage.googleapis.com/v0/b/socialstream-ba300.appspot.com/o/music_app_files%2Fplaylist_cover.jpg?alt=media&token=546adcad-e9c3-402f-8a57-b7ba252100ec";
 
 		let artistesArray;

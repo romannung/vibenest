@@ -34,16 +34,8 @@ const imageStorage = new CloudinaryStorage({
 export const uploadAudio = multer({ storage: audioStorage });
 export const uploadImage = multer({ storage: imageStorage });
 
-// Функція для завантаження файлу на Cloudinary
-export const uploadToCloudinary = async (file, type = 'auto') => {
-    try {
-        const result = await cloudinary.uploader.upload(file.path, {
-            resource_type: type,
-            folder: type === 'auto' ? 'vibenest/audio' : 'vibenest/images'
-        });
-        return result.secure_url;
-    } catch (error) {
-        console.error('Error uploading to Cloudinary:', error);
-        throw error;
-    }
+// Функція для отримання URL з Cloudinary
+export const getCloudinaryUrl = (file) => {
+    if (!file) return null;
+    return file.path; // Cloudinary Storage автоматично повертає URL в path
 }; 
