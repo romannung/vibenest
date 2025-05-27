@@ -4,6 +4,7 @@ import {
     Heading, useToast, Text, Image, SlideFade, useColorModeValue
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import client from '../services/client';
 
 const AddSongForm = () => {
     const [formData, setFormData] = useState({
@@ -104,31 +105,29 @@ const AddSongForm = () => {
                 formDataToSend.append('coverImage', formData.coverImage.trim());
             }
 
-            const response = await fetch('http://localhost:5000/api/songs/create', {
-                method: 'POST',
-                body: formDataToSend,
+            const response = await client.post('/songs/create', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Помилка при створенні пісні');
+            if (response.data) {
+                toast({
+                    title: "Успіх!",
+                    description: "Пісню успішно додано",
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                });
+
+                // reset
+                setFormData({ title: '', duration: '', coverImage: '', artistes: '' });
+                setAudioFile(null);
+                audioFileRef.current = null;
+                setImageFile(null);
+                setPreviewImage('');
+                navigate('/home');
             }
-
-            toast({
-                title: "Успіх!",
-                description: "Пісню успішно додано",
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-            });
-
-            // reset
-            setFormData({ title: '', duration: '', coverImage: '', artistes: '' });
-            setAudioFile(null);
-            audioFileRef.current = null;
-            setImageFile(null);
-            setPreviewImage('');
-            navigate('/home');
         } catch (error) {
             showError(error.message || 'Помилка при відправці форми. Спробуйте ще раз.');
         } finally {
