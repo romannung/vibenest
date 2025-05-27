@@ -15,6 +15,7 @@ import {
     useColorModeValue
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { client } from '../api';
 
 const AddSongForm = () => {
     const [formData, setFormData] = useState({
@@ -108,7 +109,57 @@ const AddSongForm = () => {
                     <VStack spacing={8} align="stretch" w="full" color={textColor}>
                         <Heading as="h1" size="lg">Додати нову пісню</Heading>
                         <form onSubmit={async (e) => {
-                            e.preventDefault()
+                            e.preventDefault();
+                            if (!audioFile) {
+                                toast({
+                                    title: "Помилка!",
+                                    description: "Будь ласка, виберіть аудіо файл",
+                                    status: "error",
+                                    duration: 3000,
+                                    isClosable: true,
+                                });
+                                return;
+                            }
+
+                            setSubmitting(true);
+                            const formDataToSend = new FormData();
+                            formDataToSend.append('title', formData.title);
+                            formDataToSend.append('duration', formData.duration);
+                            formDataToSend.append('artistes', JSON.stringify(formData.artistes.split(',').map(artist => artist.trim())));
+                            formDataToSend.append('file', audioFile);
+                            if (imageFile) {
+                                formDataToSend.append('image', imageFile);
+                            }
+
+                            try {
+                                const response = await client.post('/songs/create', formDataToSend, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                    },
+                                });
+
+                                if (response.data) {
+                                    toast({
+                                        title: "Успіх!",
+                                        description: "Пісню успішно додано",
+                                        status: "success",
+                                        duration: 3000,
+                                        isClosable: true,
+                                    });
+                                    navigate('/');
+                                }
+                            } catch (error) {
+                                console.error('Error uploading song:', error);
+                                toast({
+                                    title: "Помилка!",
+                                    description: error.response?.data?.message || "Сталася помилка при завантаженні пісні",
+                                    status: "error",
+                                    duration: 3000,
+                                    isClosable: true,
+                                });
+                            } finally {
+                                setSubmitting(false);
+                            }
                         }}>
                             <VStack spacing={6} w="full">
                                 <FormControl isRequired>

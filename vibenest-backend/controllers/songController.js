@@ -1,5 +1,6 @@
 import Song from "../models/Song.js";
 import User from "../models/User.js";
+import { uploadToCloudinary } from "../config/cloudinaryConfig.js";
 
 //@desc Get all the songs
 //@route GET /api/songs
@@ -156,10 +157,10 @@ const createSong = async (req, res) => {
 		const audioFile = req.files.file[0];
 		const imageFile = req.files.image && req.files.image.length > 0 ? req.files.image[0] : null;
 
-		// Створюємо URL для файлів з повним шляхом до бекенду
-		const songUrl = `http://localhost:5000/uploads/audio/${audioFile.filename}`;
+		// Завантажуємо файли на Cloudinary
+		const songUrl = await uploadToCloudinary(audioFile, 'auto');
 		const coverImage = imageFile 
-			? `http://localhost:5000/uploads/images/${imageFile.filename}`
+			? await uploadToCloudinary(imageFile, 'image')
 			: "https://firebasestorage.googleapis.com/v0/b/socialstream-ba300.appspot.com/o/music_app_files%2Fplaylist_cover.jpg?alt=media&token=546adcad-e9c3-402f-8a57-b7ba252100ec";
 
 		let artistesArray;

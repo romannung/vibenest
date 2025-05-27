@@ -6,11 +6,7 @@ import { songsRouter } from "./routes/songRoutes.js";
 import { userRouter } from "./routes/userRoutes.js";
 import { artisteRouter } from "./routes/artisteRoutes.js";
 import { playlistRouter } from "./routes/playlistRoutes.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { v2 as cloudinary } from 'cloudinary';
 
 dotenv.config();
 
@@ -25,13 +21,12 @@ app.use(cors({
 
 app.use(express.json());
 
-// Serve static files from uploads directory with CORS
-app.use('/uploads', (req, res, next) => {
-	res.setHeader('Access-Control-Allow-Origin', '*');
-	next();
-}, express.static(path.join(__dirname, 'uploads')));
-
-connectDb();
+// Налаштування Cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 app.use("/api/songs/", songsRouter);
 app.use("/api/users/", userRouter);
@@ -43,3 +38,9 @@ const port = process.env.PORT || 5000;
 app.listen(port, '0.0.0.0', async () => {
 	console.log(`SERVER RUNNING ON PORT ${port}`);
 });
+
+cloudinary.api.ping()
+	.then(() => console.log('FILE DATABASE CONNECTED Cloudinary'))
+	.catch(err => console.error('FILE DATABASE NOT CONNECTED Cloudinary:', err));
+
+connectDb();

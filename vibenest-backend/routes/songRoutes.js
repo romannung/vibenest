@@ -10,7 +10,7 @@ import {
 	getSongById
 } from "../controllers/songController.js";
 import { verifyToken } from "../middleware/validateToken.js";
-import { upload } from "../config/multerConfig.js";
+import { uploadAudio, uploadImage } from "../config/cloudinaryConfig.js";
 
 const router = express.Router();
 
@@ -18,12 +18,9 @@ router.get("/", getSongs);
 router.get("/top", getTopSongs);
 router.get("/releases", getNewReleases);
 router.get("/random", getRandom);
-router.get("/popular", getAroundYou);
+router.get("/around-you", getAroundYou);
 router.get("/:id", getSongById);
 router.patch("/like/:id", verifyToken, likeSong);
-router.post("/create", upload.fields([
-	{ name: 'file', maxCount: 1 },
-	{ name: 'image', maxCount: 1 }
-]), createSong);
+router.post("/create", uploadAudio.single('file'), uploadImage.single('image'), createSong);
 
 export { router as songsRouter };
