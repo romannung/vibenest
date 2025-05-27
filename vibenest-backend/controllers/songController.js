@@ -1,6 +1,6 @@
 import Song from "../models/Song.js";
 import User from "../models/User.js";
-import { uploadToCloudinary, getCloudinaryUrl } from "../config/cloudinaryConfig.js";
+import { uploadAudio, getCloudinaryUrl } from "../config/cloudinaryConfig.js";
 
 //@desc Get all the songs
 //@route GET /api/songs
@@ -139,54 +139,92 @@ const likeSong = async (req, res) => {
 
 const createSong = async (req, res) => {
 	try {
+		console.log('=== Початок створення пісні ===');
 		console.log('Request body:', req.body);
-		console.log('Request files:', req.files);
+		console.log('Request file:', req.file);
 		
 		const { title, duration, artistes } = req.body;
 		
 		// Перевірка наявності файлу
 		if (!req.file) {
+			console.log('Помилка: Аудіо файл відсутній');
 			return res.status(400).json({ message: "Аудіо файл обов'язковий" });
 		}
 
 		// Перевірка обов'язкових полів
 		if (!title || !duration || !artistes) {
+			console.log('Помилка: Відсутні обов\'язкові поля', { title, duration, artistes });
 			return res.status(400).json({ message: "Всі поля обов'язкові" });
 		}
 
 		// Отримуємо URL з Cloudinary
+		console.log('Отримання URL з Cloudinary');
 		const songUrl = getCloudinaryUrl(req.file);
-		const coverImage = req.file 
-			? getCloudinaryUrl(req.file)
-			: "https://firebasestorage.googleapis.com/v0/b/socialstream-ba300.appspot.com/o/music_app_files%2Fplaylist_cover.jpg?alt=media&token=546adcad-e9c3-402f-8a57-b7ba252100ec";
+		console.log('URL пісні:', songUrl);
+
+		if (!songUrl) {
+			console.log('Помилка: Не вдалося отримати URL пісні з Cloudinary');
+			return res.status(500).json({ message: "Помилка при завантаженні файлу" });
+		}
 
 		let artistesArray;
 		try {
+			console.log('Парсинг виконавців:', artistes);
 			artistesArray = JSON.parse(artistes);
 			if (!Array.isArray(artistesArray)) {
 				artistesArray = [artistes];
 			}
 		} catch (error) {
-			// Якщо не вдалося розпарсити JSON, припускаємо що це один виконавець
+			console.log('Помилка парсингу виконавців, використовуємо як єдиний рядок');
 			artistesArray = [artistes];
 		}
+
+		console.log('Створення нової пісні з даними:', {
+			title: title.trim(),
+			duration: duration.trim(),
+			coverImage: req.file.path,
+			artistes: artistesArray,
+			songUrl
+		});
 
 		const newSong = new Song({
 			title: title.trim(),
 			duration: duration.trim(),
-			coverImage,
+			coverImage: req.file.path,
 			artistes: artistesArray,
 			songUrl,
 			type: "Song",
 			likes: new Map()
 		});
 
+		console.log('Збереження пісні в базу даних');
 		const savedSong = await newSong.save();
-		console.log('Song saved:', savedSong);
+		console.log('Пісню збережено:', savedSong);
+		
 		res.status(201).json(savedSong);
 	} catch (error) {
-		console.error('Error creating song:', error);
-		res.status(500).json({ message: error.message });
+		console.error('Помилка при створенні пісні:', error);
+		console.error('Stack trace:', error.stack);
+		
+		// Визначаємо тип помилки
+		if (error.name === 'ValidationError') {
+			return res.status(400).json({ 
+				message: "Помилка валідації даних",
+				details: error.message 
+			});
+		}
+		
+		if (error.name === 'MulterError') {
+			return res.status(400).json({ 
+				message: "Помилка завантаження файлу",
+				details: error.message 
+			});
+		}
+		
+		res.status(500).json({ 
+			message: "Внутрішня помилка сервера",
+			details: error.message 
+		});
 	}
 };
 

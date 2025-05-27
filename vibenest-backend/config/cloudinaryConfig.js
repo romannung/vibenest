@@ -15,7 +15,11 @@ const audioStorage = new CloudinaryStorage({
         folder: 'vibenest/audio',
         resource_type: 'auto',
         allowed_formats: ['mp3', 'wav'],
-        format: 'mp3'
+        format: 'mp3',
+        transformation: [
+            { audio_codec: 'aac' },
+            { bit_rate: '128k' }
+        ]
     }
 });
 
@@ -31,11 +35,52 @@ const imageStorage = new CloudinaryStorage({
 });
 
 // Створюємо multer middleware для різних типів файлів
-export const uploadAudio = multer({ storage: audioStorage });
-export const uploadImage = multer({ storage: imageStorage });
+export const uploadAudio = multer({
+    storage: audioStorage,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('audio/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Дозволені тільки аудіо файли'));
+        }
+    }
+});
+
+export const uploadImage = multer({
+    storage: imageStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Дозволені тільки зображення'));
+        }
+    }
+});
 
 // Функція для отримання URL з Cloudinary
 export const getCloudinaryUrl = (file) => {
-    if (!file) return null;
-    return file.path; // Cloudinary Storage автоматично повертає URL в path
+    if (!file) {
+        console.log('Файл відсутній');
+        return null;
+    }
+
+    if (!file.path) {
+        console.log('URL файлу відсутній в об\'єкті file');
+        return null;
+    }
+
+    // Перевіряємо, чи URL починається з https://
+    if (!file.path.startsWith('https://')) {
+        console.log('Неправильний формат URL:', file.path);
+        return null;
+    }
+
+    console.log('Успішно отримано URL з Cloudinary:', file.path);
+    return file.path;
 }; 
