@@ -15,6 +15,8 @@ import {
     useColorModeValue
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { client } from '../api';
+import { useSelector } from 'react-redux';
 
 const AddSongForm = () => {
     const [formData, setFormData] = useState({
@@ -29,6 +31,7 @@ const AddSongForm = () => {
     const [submitting, setSubmitting] = useState(false);
     const toast = useToast();
     const navigate = useNavigate();
+    const { token } = useSelector((state) => state.user);
 
     const textColor = useColorModeValue('gray.800', 'white');
 
@@ -85,6 +88,76 @@ const AddSongForm = () => {
         }
     };
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!token) {
+            toast({
+                title: "Помилка",
+                description: "Будь ласка, увійдіть щоб додати пісню",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        if (!audioFile) {
+            toast({
+                title: "Помилка",
+                description: "Будь ласка, виберіть аудіо файл",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('title', formData.title);
+            formDataToSend.append('duration', formData.duration);
+            formDataToSend.append('artistes', formData.artistes);
+            formDataToSend.append('file', audioFile);
+            
+            if (imageFile) {
+                formDataToSend.append('image', imageFile);
+            } else if (formData.coverImage) {
+                formDataToSend.append('coverImage', formData.coverImage);
+            }
+
+            await client.post('/songs/create', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            toast({
+                title: "Успішно",
+                description: "Пісню додано",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+
+            navigate('/');
+        } catch (error) {
+            console.error('Error adding song:', error);
+            toast({
+                title: "Помилка",
+                description: "Не вдалося додати пісню",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const fileInputStyles = {
         position: 'absolute',
         top: 0,
@@ -107,9 +180,7 @@ const AddSongForm = () => {
                 <SlideFade in offsetY={20}>
                     <VStack spacing={8} align="stretch" w="full" color={textColor}>
                         <Heading as="h1" size="lg">Додати нову пісню</Heading>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault()
-                        }}>
+                        <form onSubmit={handleSubmit}>
                             <VStack spacing={6} w="full">
                                 <FormControl isRequired>
                                     <FormLabel color="white">Назва пісні</FormLabel>
