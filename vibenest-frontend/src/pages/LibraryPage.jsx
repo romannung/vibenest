@@ -12,33 +12,35 @@ const LibraryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchSongs = async () => {
-	setLoading(true);
-	setError(false);
-	try {
-	  const response = await client.get("/songs", {
-		params: { searchTerm },
-	  });
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await client.get("/api/songs", {
+        params: { searchTerm },
+      });
   
-	  // Filter the songs based on the search term on the client-side
-	  const filteredSongs = response.data.filter((song) => {
-		// Check if either the title or any artist matches the search term
-		return (
-		  song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		  song.artistes.some((artist) =>
-			artist.toLowerCase().includes(searchTerm.toLowerCase())
-		  )
-		);
-	  });
+      // Filter the songs based on the search term on the client-side
+      const filteredSongs = response.data.filter((song) => {
+        // Check if either the title or any artist matches the search term
+        return (
+          song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          song.artistes.some((artist) =>
+            artist.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        );
+      });
   
-	  setSongs(filteredSongs);
-	  setLoading(false);
-	} catch (error) {
-	  setError(true);
-	  setLoading(false);
-	}
+      setSongs(filteredSongs);
+      setLoading(false);
+    } catch (error) {
+      setError(true);
+      setLoading(false);
+    }
   };
   
-  
+  const handleDelete = (songId) => {
+    setSongs(prev => prev.filter(song => song._id !== songId));
+  };
 
   useEffect(() => {
     fetchSongs();
@@ -83,7 +85,11 @@ const LibraryPage = () => {
         gap={{ base: 3, md: 6 }}
       >
         {songs.map((song) => (
-          <SongCard key={song._id} song={song} />
+          <SongCard 
+            key={song._id} 
+            song={song} 
+            onDelete={handleDelete}
+          />
         ))}
       </Grid>
       {error && (

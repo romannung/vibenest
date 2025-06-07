@@ -6,6 +6,11 @@ import {
 	Image,
 	Text,
 	useToast,
+	IconButton,
+	Menu,
+	MenuButton,
+	MenuList,
+	MenuItem,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -21,12 +26,13 @@ import {
 	AiFillPauseCircle,
 	AiFillPlayCircle,
 	AiOutlineHeart,
+	AiOutlineMore,
 } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import { client } from "../api";
 import { setUser } from "../redux/slices/userSlice";
 
-const SongCard = ({ song, audioRef }) => {
+const SongCard = ({ song, audioRef, onDelete }) => {
 	const dispatch = useDispatch();
 	const { currentTrack, isPlaying } = useSelector((state) => state.player);
 	const { user, token } = useSelector((state) => state.user);
@@ -63,6 +69,28 @@ const SongCard = ({ song, audioRef }) => {
 					status: "error",
 				});
 			});
+	};
+
+	const handleDelete = async () => {
+		try {
+			await client.delete(`/api/songs/${song._id}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			toast({
+				description: "Пісню видалено",
+				status: "success",
+			});
+			if (onDelete) {
+				onDelete(song._id);
+			}
+		} catch (error) {
+			toast({
+				description: "Не вдалося видалити пісню",
+				status: "error",
+			});
+		}
 	};
 
 	const isCurrentTrack = currentTrack?._id === song?._id;
@@ -124,8 +152,8 @@ const SongCard = ({ song, audioRef }) => {
 					</Button>
 				</Box>
 			</Box>
-			<Flex gap={2} justify="space-between">
-				<Box px={2}>
+			<Flex gap={2} justify="space-between" align="center" px={2}>
+				<Box>
 					<Heading
 						as="h5"
 						fontSize={{ base: "sm", md: "md" }}
@@ -143,25 +171,48 @@ const SongCard = ({ song, audioRef }) => {
 						</Text>
 					</Link>
 				</Box>
-				{user && (
-					<Button
-						variant="unstyled"
-						color={isFavorite ? "red.500" : "#b1b1b1"}
-						minW={6}
-						onClick={handleLike}
-						transition="all 0.15s cubic-bezier(.4,0,.2,1)"
-						_hover={isFavorite
-							? { color: "red.400", transform: "scale(1.2)" }
-							: { color: "red.500", transform: "scale(1.2)" }
-						}
-					>
-						{isFavorite ? (
-							<AiFillHeart color="inherit" />
-						) : (
-							<AiOutlineHeart color="inherit" />
-						)}
-					</Button>
-				)}
+				<Flex gap={1}>
+					{user && (
+						<Button
+							variant="unstyled"
+							color={isFavorite ? "red.500" : "#b1b1b1"}
+							minW={6}
+							onClick={handleLike}
+							transition="all 0.15s cubic-bezier(.4,0,.2,1)"
+							_hover={isFavorite
+								? { color: "red.400", transform: "scale(1.2)" }
+								: { color: "red.500", transform: "scale(1.2)" }
+							}
+						>
+							{isFavorite ? (
+								<AiFillHeart color="inherit" />
+							) : (
+								<AiOutlineHeart color="inherit" />
+							)}
+						</Button>
+					)}
+					{user && (
+						<Menu>
+							<MenuButton
+								as={IconButton}
+								icon={<AiOutlineMore />}
+								variant="unstyled"
+								color="gray.400"
+								_hover={{ color: "white" }}
+								size="sm"
+							/>
+							<MenuList bg="zinc.800">
+								<MenuItem 
+									onClick={handleDelete}
+									_hover={{ bg: "zinc.700" }}
+									color="red.400"
+								>
+									Видалити
+								</MenuItem>
+							</MenuList>
+						</Menu>
+					)}
+				</Flex>
 			</Flex>
 		</Box>
 	);

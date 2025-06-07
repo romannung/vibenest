@@ -7,7 +7,8 @@ import {
 	getTopSongs,
 	likeSong,
 	createSong,
-	getSongById
+	getSongById,
+	deleteSong
 } from "../controllers/songController.js";
 import { verifyToken } from "../middleware/validateToken.js";
 import { upload } from "../config/multerConfig.js";
@@ -25,5 +26,6 @@ router.post("/create", upload.fields([
 	{ name: 'file', maxCount: 1 },
 	{ name: 'image', maxCount: 1 }
 ]), createSong);
+router.delete("/:id", verifyToken, deleteSong);
 
 export { router as songsRouter };

@@ -210,6 +210,39 @@ const getSongById = async (req, res) => {
 	}
 };
 
+//@desc Delete a song
+//@route DELETE /api/songs/:id
+//@access private
+const deleteSong = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const song = await Song.findById(id);
+		
+		if (!song) {
+			return res.status(404).json({ message: "Пісню не знайдено" });
+		}
+
+		// Видаляємо пісню з улюблених у всіх користувачів
+		await User.updateMany(
+			{ favorites: id },
+			{ $pull: { favorites: id } }
+		);
+
+		// Видаляємо пісню з плейлистів
+		await User.updateMany(
+			{ "playlists.songs": id },
+			{ $pull: { "playlists.$.songs": id } }
+		);
+
+		// Видаляємо пісню
+		await Song.findByIdAndDelete(id);
+
+		res.status(200).json({ message: "Пісню успішно видалено" });
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
 export {
 	getSongs,
 	getTopSongs,
@@ -218,5 +251,6 @@ export {
 	getAroundYou,
 	likeSong,
 	createSong,
-	getSongById
+	getSongById,
+	deleteSong
 };
