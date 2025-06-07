@@ -73,7 +73,7 @@ const SongCard = ({ song, audioRef, onDelete }) => {
 
 	const handleDelete = async () => {
 		try {
-			await client.delete(`/api/songs/${song._id}`, {
+			await client.delete(`/songs/${song._id}`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},

@@ -15,7 +15,7 @@ const LibraryPage = () => {
     setLoading(true);
     setError(false);
     try {
-      const response = await client.get("/api/songs", {
+      const response = await client.get("/songs", {
         params: { searchTerm },
       });
   
