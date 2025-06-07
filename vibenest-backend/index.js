@@ -18,11 +18,11 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-	origin: ['https://vibenest-1-0zkv.onrender.com', 'http://localhost:5000', 'http://localhost:5173'],
+	origin: ['https://vibenest-frontend.onrender.com', 'https://vibenest-frontend-fullhost.onrender.com', 
+			 'http://localhost:5000', 'http://localhost:5173'],
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	credentials: true
 }));
-
 app.use(express.json());
 
 // Serve static files from uploads directory with CORS
