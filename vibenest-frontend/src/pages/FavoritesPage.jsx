@@ -17,31 +17,47 @@ const FavoritesPage = () => {
 	const fetchFavorites = async () => {
 		setLoading(true);
 		setError(false);
-		await client
-			.get("/users/favorites", {
+		try {
+			const response = await client.get("/users/favorites", {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
-			})
-			.then((res) => {
-				setLoading(false);
-				setFavorites(res.data);
-			})
-			.catch(() => {
-				setLoading(false);
-				setError(true);
 			});
+			// Фільтруємо null значення
+			const validFavorites = response.data.filter(song => song !== null);
+			setFavorites(validFavorites);
+		} catch (error) {
+			setError(true);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	useEffect(() => {
 		token && fetchFavorites();
-	}, []);
+	}, [token]);
 
 	const onPlay = (song) => {
-		const index = favorites?.findIndex((s) => s._id == song._id);
+		if (!song) return;
+		const index = favorites?.findIndex((s) => s?._id === song._id);
+		if (index === -1) return;
 
 		dispatch(setTrackList({ list: favorites, index }));
 		dispatch(playTrack(song));
+	};
+
+	const handleDelete = async (songId) => {
+		try {
+			await client.delete(`/songs/${songId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			// Оновлюємо список улюблених пісень
+			await fetchFavorites();
+		} catch (error) {
+			console.error("Помилка при видаленні пісні:", error);
+		}
 	};
 
 	if (!user) {
@@ -91,8 +107,13 @@ const FavoritesPage = () => {
 				</Text>
 			)}
 			<Flex direction="column" gap={4} mt={4}>
-				{favorites?.map((song) => (
-					<ArtisteSong key={song._id} song={song} handlePlay={onPlay} />
+				{favorites?.filter(song => song !== null).map((song) => (
+					<ArtisteSong 
+						key={song._id} 
+						song={song} 
+						handlePlay={onPlay}
+						onDelete={handleDelete}
+					/>
 				))}
 			</Flex>
 			{!loading && !error && favorites.length < 1 && (
