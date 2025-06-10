@@ -40,10 +40,10 @@ const ArtistesPage = () => {
 					fontSize={{ base: "xl", md: "2xl" }}
 					fontWeight="semibold"
 					mb={{ base: 1, md: 3 }}>
-					Artistes
+						Виконавці
 				</Heading>
 				<Text fontSize="sm" color="zinc.400">
-					Discover new artistes
+					Відкрийте для себе нових артистів
 				</Text>
 			</Box>
 			{loading && artistes.length < 1 && (
@@ -65,7 +65,7 @@ const ArtistesPage = () => {
 			</Grid>
 			{error && (
 				<Box>
-					<Text>Sorry, an error occured</Text>
+					<Text>Вибачте, сталася помилка</Text>
 				</Box>
 			)}
 		</Box>
